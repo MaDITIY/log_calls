@@ -65,16 +65,28 @@ def log_result(result, log, path):
 
 
 def log_func_call(log, extension):
-  if extension == 'yaml':
-    text = yaml.dump([log])
-  else:
-    text = json.dumps([log])
   file_path = os.path.abspath(os.path.join(os.getcwd(), 'app.log.'+extension))
-  with open(file_path, 'a+') as f:
-    f.write(text)
+  if extension == 'yaml':
+    with open(file_path, 'a+') as f:
+      text = yaml.dump(log)
+      f.write(text)
+  else:
+    data = None
+    if os.path.exists(file_path):
+      with open(file_path, 'r') as f:
+        data = json.load(f)
+    if not data is None:
+      data.append(log)
+      text = json.dumps(data)
+    else:
+      text = json.dumps([log])
+    with open(file_path, 'w') as f:
+      f.write(text)
+
 
 @log_calls(format='JSON')
 def sum(a, b, d):
   return a + b + d
+
 
 print(sum(1, 4, d=6))
