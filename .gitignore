@@ -1,4 +1,5 @@
 .idea/
-app.log.*
+app.log.json
+app.log.yaml
 log_args.iml
 pkl_files/

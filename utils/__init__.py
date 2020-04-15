@@ -25,9 +25,11 @@ def log_calls(format='JSON'):
       }
       result = func(*args, **kwargs)
       pkl_path = get_path_pkl()
-      log_args(args, log, pkl_path)
-      log_kwargs(kwargs, log, pkl_path)
-      log_result(result, log, pkl_path)
+      for arg in args:
+        log['args'].append(write_to_pkl(arg, pkl_path))
+      for key, value in kwargs.items():
+        log['kwargs'][key] = write_to_pkl(value, pkl_path)
+      log['result'] = write_to_pkl(result, pkl_path)
       log_func_call(log, file_ext)
       return result
     return wrapper
@@ -41,34 +43,18 @@ def get_path_pkl():
   return dir_path
 
 
-def log_args(args, log, path):
-  for arg in args:
-    pkl_file_name = str(uuid.uuid4())+'.pkl'
-    with open(os.path.join(path, pkl_file_name), 'wb') as f:
-      pickle.dump(arg, f)
-    log['args'].append(pkl_file_name)
-
-
-def log_kwargs(kwargs, log, path):
-  for key, value in kwargs.items():
-    pkl_file_name = str(uuid.uuid4())+'.pkl'
-    with open(os.path.join(path, pkl_file_name), 'wb') as f:
-      pickle.dump(value, f)
-    log['kwargs'][key] = pkl_file_name
-
-
-def log_result(result, log, path):
+def write_to_pkl(value, path):
   pkl_file_name = str(uuid.uuid4())+'.pkl'
   with open(os.path.join(path, pkl_file_name), 'wb') as f:
-    pickle.dump(result, f)
-  log['result'] = pkl_file_name
+    pickle.dump(value, f)
+  return pkl_file_name
 
 
 def log_func_call(log, extension):
   file_path = os.path.abspath(os.path.join(os.getcwd(), 'app.log.'+extension))
   if extension == 'yaml':
     with open(file_path, 'a+') as f:
-      text = yaml.dump(log)
+      text = yaml.dump([log])
       f.write(text)
   else:
     data = None
@@ -84,7 +70,7 @@ def log_func_call(log, extension):
       f.write(text)
 
 
-@log_calls(format='JSON')
+@log_calls(format='YAML')
 def sum(a, b, d):
   return a + b + d
 
